@@ -3,8 +3,6 @@ name: Build APK
 on:
   push:
     branches: [main]
-    tags: ["v*"]
-  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -12,11 +10,21 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - name: Unpack LumenLauncher.zip
+        run: |
+          if [ -f LumenLauncher.zip ]; then
+            rm -rf _src && mkdir _src
+            unzip -q LumenLauncher.zip -d _src
+            echo "PROJECT_DIR=_src/LumenLauncher" >> "$GITHUB_ENV"
+          else
+            echo "PROJECT_DIR=." >> "$GITHUB_ENV"
+          fi
+
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
@@ -28,10 +36,12 @@ jobs:
           gradle-version: "8.9"
 
       - name: Build release APK
-        run: gradle :app:assembleRelease --no-daemon --stacktrace
+        run: |
+          cd "$PROJECT_DIR"
+          gradle :app:assembleRelease --no-daemon --stacktrace
 
       - name: Name the APK
-        run: cp app/build/outputs/apk/release/app-release.apk Lumen-Launcher.apk
+        run: cp "$PROJECT_DIR/app/build/outputs/apk/release/app-release.apk" Lumen-Launcher.apk
 
       - uses: actions/upload-artifact@v4
         with:
@@ -48,9 +58,3 @@ jobs:
             --title "Lumen Launcher (latest build)" \
             --notes "Automatic build of ${GITHUB_SHA::7}" \
             --prerelease --target "$GITHUB_SHA"
-
-      - name: Publish tagged release
-        if: startsWith(github.ref, 'refs/tags/v')
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release create "${GITHUB_REF_NAME}" Lumen-Launcher.apk --title "Lumen ${GITHUB_REF_NAME}" --generate-notes
