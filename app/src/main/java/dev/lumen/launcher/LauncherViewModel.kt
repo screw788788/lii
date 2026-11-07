@@ -148,8 +148,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         save("dock", dockKeys)
     }
 
-    fun setAllOnHome(value: Boolean) {
-        allOnHome = value
+   fun changeAllOnHome(value: Boolean) {
+       allOnHome = value
         prefs.edit().putBoolean("all_on_home", value).apply()
     }
 
