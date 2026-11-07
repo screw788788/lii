@@ -378,7 +378,7 @@ fun LauncherApp(
         SettingsSheet(
             visible = sheetVisible,
             allOnHome = vm.allOnHome,
-            onAllOnHome = { vm.setAllOnHome(it) },
+            onAllOnHome = { vm.changeAllOnHome(it) },
             onWallpaper = { style ->
                 scope.launch {
                     val ok = withContext(Dispatchers.Default) { applyWallpaper(context, style) }
